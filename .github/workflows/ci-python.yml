@@ -1,0 +1,16 @@
+# CI caller for Python projects.
+name: CI (Python)
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  call-ci:
+    uses: ./.github/workflows/ci-reusable.yml
+    with:
+      stack: python
+      python-version: "3.12"
+      lint-command: "flake8 ."
+      build-command: "python -m build"
+      test-command: "pytest"

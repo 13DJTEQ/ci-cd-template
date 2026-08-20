@@ -1,0 +1,17 @@
+# CI caller for iOS projects (runs on macOS runners).
+# Edit scheme/workspace names to match your Xcode project.
+name: CI (iOS)
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  call-ci:
+    uses: ./.github/workflows/ci-reusable.yml
+    with:
+      stack: ios
+      xcode-version: "15.4"
+      lint-command: "swiftlint"
+      build-command: "xcodebuild -scheme MyApp -configuration Release build"
+      test-command: "xcodebuild test -scheme MyApp -destination 'platform=iOS Simulator,name=iPhone 15'"
