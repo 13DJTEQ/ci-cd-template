@@ -5,8 +5,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+# Guard: these callers only run in CONSUMER repos (which have a real project).
+# The template repo itself has no project, so skip to avoid failing CI noise.
 jobs:
   call-ci:
+    if: github.repository != '13DJTEQ/ci-cd-template'
     uses: ./.github/workflows/ci-reusable.yml
     with:
       stack: go
