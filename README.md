@@ -40,7 +40,7 @@ Key rules:
 3. Set `release-type` in `release-please-config.json` to match the stack:
    `node`, `python`, `go`, or a
    [release-please release-type](https://github.com/googleapis/release-please).
-4. Add `commitlint` dev dependency and `commitlint.config.js` (already included).
+4. Add `commitlint` dev dependency and `commitlint.config.cjs` (already included).
 5. Replace the placeholder body in `scripts/deploy.sh` with your real deploy
    (kubectl / ssh / fastlane), branching on `$1` (staging|prod).
 
