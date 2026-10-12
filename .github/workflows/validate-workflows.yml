@@ -40,10 +40,21 @@ jobs:
           find .github \( -name '*.yaml' -o -name '*.yml' \) -print0 | xargs -0 yamllint -d relaxed
           echo "=== YAML validation passed ==="
 
-      - name: Validate GitHub Actions schema (actionlint)
-        uses: rickstaa/actionlint@v4
-        with:
-          args: "-color"
+      - name: Install actionlint
+        run: |
+          ARCH=$(uname -m)
+          case $ARCH in
+            x86_64) ARCH="x86_64" ;;
+            aarch64|arm64) ARCH="arm64" ;;
+          esac
+          curl -sSL -o /tmp/actionlint.tar.gz \
+            "https://github.com/actionlint/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_${ARCH}.tar.gz"
+          tar xzf /tmp/actionlint.tar.gz -C /tmp
+          sudo cp /tmp/actionlint /usr/local/bin/actionlint
+          echo "actionlint version: $(actionlint --version)"
+
+      - name: Run actionlint
+        run: actionlint -color
 
       - name: Validate workflow references
         run: |
