@@ -1,0 +1,56 @@
+# Validate all GitHub Actions workflow YAML and general YAML config files.
+# Catches syntax errors, bad action references, and schema mismatches before CI breaks.
+name: Validate Workflows
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+      - "**/*.yaml"
+      - "**/*.yml"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "**/*.yaml"
+      - "**/*.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation tools
+        run: |
+          pip install yamllint
+          pip install validate-pyproject 2>/dev/null || true
+
+      - name: Validate all YAML files
+        run: |
+          echo "=== Validating YAML syntax ==="
+          yamllint -d relaxed .github/workflows/ release-please-config.json .release-please-manifest.json
+          echo "=== Validating every YAML in .github ==="
+          find .github \( -name '*.yaml' -o -name '*.yml' \) -print0 | xargs -0 yamllint -d relaxed
+          echo "=== YAML validation passed ==="
+
+      - name: Validate GitHub Actions schema (actionlint)
+        uses: rickstaa/actionlint@v4
+        with:
+          args: "-color"
+
+      - name: Validate workflow references
+        run: |
+          echo "=== Checking all reusable workflow calls resolve ==="
+          # Ensure ci-reusable.yml and deploy-reusable.yml exist
+          test -f .github/workflows/ci-reusable.yml || { echo "ERROR: ci-reusable.yml missing"; exit 1; }
+          test -f .github/workflows/deploy-reusable.yml || { echo "ERROR: deploy-reusable.yml missing"; exit 1; }
+          # Ensure scripts referenced by deploy exist
+          test -f scripts/deploy.sh || { echo "ERROR: scripts/deploy.sh missing"; exit 1; }
+          echo "=== All references resolve ==="

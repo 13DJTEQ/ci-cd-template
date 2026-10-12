@@ -19,7 +19,7 @@ case "$ENV" in
     # kubectl set image deploy/app app="registry.example.com/app:${TAG}" --namespace=staging
     echo "STAGING DEPLOY PLACEHOLDER for ${TAG}"
     ;;
-  prod)
+  prod|production)
     # Gate prod behind an explicit approval (GitHub environment) + health check.
     echo "PROD DEPLOY PLACEHOLDER for ${TAG}"
     ;;
