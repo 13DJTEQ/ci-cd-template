@@ -1,0 +1,61 @@
+# Dependency Review: gates PRs on vulnerable/unwanted dependency changes.
+# Uses actions/dependency-review-action@v4 (latest stable major).
+#
+# Requires the `security_events` scope to manage code-scanning/Dependabot
+# alerts via API. To grant it:
+#   gh auth refresh -h github.com -s security_events -c
+#
+# Install: copy to .github/workflows/dependency-review.yml in the repo.
+
+name: Dependency Review
+
+on:
+  # Trigger on PRs that touch dependency manifests.
+  # Pull-request-target is NOT used here: Dependabot PRs send the manifest
+  # diff in the normal `pull_request` event, and dependency-review-action reads
+  # the merged PR diff which is safe for public repos.
+  pull_request:
+    branches: [master]
+    paths:
+      - "pyproject.toml"        # Python project metadata + deps
+      - "uv.lock"               # uv lockfile
+      - "requirements*.txt"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+      - "Dockerfile"
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pull request
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Block HIGH and CRITICAL CVEs; fail the check.
+          # Lower severities (low/moderate) are reported as comments.
+          fail-on-severity: "high"
+          # Permissive licenses used by the current dependency set:
+          # asusrouter, aiohttp, key-ring, pydantic, click, aiosqlite,
+          # rich, python-dotenv, asyncssh, and dev deps (pytest, ruff).
+          allow-licenses: |
+            MIT
+            Apache-2.0
+            BSD-3-Clause
+            ISC
+            Python-2.0
+            BSL-1.0
+            Unicode-DFS-2016     # pydantic 2.x dependency
+          deny-licenses: |
+            GPL-2.0
+            GPL-3.0
+            AGPL-3.0
+            LGPL-2.1
+            UNLICENSE
+          # Ignore transient files so lockfile drift in CI doesn't break PRs.
+          ignore-cfg: false

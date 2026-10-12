@@ -1,0 +1,78 @@
+# CodeQL code scanning for 13DJTEQ/ASUSRouterControl
+#
+# This is the CUSTOM workflow (the "advanced setup" path). It is the
+# alternative to GitHub's API-based DEFAULT SETUP, which the current token
+# cannot enable because the `security_events` scope is absent.
+#
+# If you later re-aut with the security_events scope you can enable the
+# simpler default setup instead:
+#   gh auth refresh -h github.com -s security_events -c
+#   gh api repos/$GH_OWNER/$GH_REPO/code-scanning/default-branches -X PUT \
+#       -F query_suite='default' -F languages='["python"]'
+#
+# Install: copy to .github/workflows/codeql-analysis.yml in the repo.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    # Run on PRs targeting master. For public repos this works for forks too
+    # because CodeQL only needs to read the PR head, not publish to it.
+    branches: [master]
+  schedule:
+    # Weekly full scan to catch issues missed on PR cadence.
+    - cron: "0 5 * * 1"        # every Monday 05:00 UTC
+  workflow_dispatch:
+
+# Required for uploading SARIF results to github.com code scanning.
+permissions:
+  security-events: write
+  actions: read
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  # Don't cancel PR analysis while queued; only dedupe same-ref runs.
+  cancel-in-progress: ${{ !github.head_ref }}
+
+jobs:
+  analyze:
+    name: Analyze (Python)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write   # upload results
+      actions: read
+      contents: read
+
+    # This repository is Python-only (aiohttp, pydantic, click, asyncssh,
+    # asusrouter, etc.), so a single-language matrix keeps it simple and fast.
+    strategy:
+      fail-fast: false          # report all languages even if one fails
+      matrix:
+        language: ["python"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # Default query suite = security-and-quality.
+          # To extend coverage, uncomment:
+          #   queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        # CodeQL builds a database of the source. For Python the autobuild
+        # step detects the virtualenv/venv. If it fails, add a manual build
+        # step that installs deps before this action runs.
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          # Namespace results so a future JS/Go matrix step can coexist.
+          category: "python"

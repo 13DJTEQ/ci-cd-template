@@ -1,0 +1,74 @@
+# Dependabot configuration for 13DJTEQ/ASUSRouterControl
+# Multi-ecosystem: Python (pip) + GitHub Actions
+#
+# Note: Dependabot SECURITY alerts & auto-updates are created automatically by
+# GitHub once a valid dependabot.yml exists; only VERSION updates (non-security)
+# are governed by the settings below.
+#
+# Install: copy this file to the repo root as `.github/dependabot.yml`
+#          then enable Dependabot via the repo Settings -> Code security & analysis
+#          (or via API once you have the `security_events` scope):
+#            gh auth refresh -h github.com -s security_events -c
+#            gh api repos/$GH_OWNER/$GH_REPO -X PATCH \
+#              -F security_and_analysis='{"dependabot_alerts":{"status":"enabled"},"dependabot_security_updates":{"status":"enabled"}}'
+
+version: 2
+
+updates:
+  # --- Python (pip) -------------------------------------------------------
+  # Sources: pyproject.toml (root) + uv.lock.
+  # Dependabot's "pip" ecosystem reads pyproject.toml / requirements files.
+  # It does NOT yet track uv.lock directly; the pyproject [project] table is
+  # the source of truth for dependency version bumps here.
+  - package-ecosystem: "pip"
+    directory: "/"
+    target-branch: "master"          # match the repo default branch
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"                  # UTC, runs alongside other scheduled jobs
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+    # Optional: uncomment and fill with real GitHub handles/teams
+    # reviewers:
+    #   - "bavila"
+    # assignees:
+    #   - "bavila"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    pr-branch-prefix: "deps/pip/"
+    ignore:
+      # Never auto-bump a major version without a manual review.
+      # Patch + minor updates remain enabled (Dependabot security updates are
+      # not affected by these ignore rules).
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # --- GitHub Actions -----------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "master"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "UTC"
+    labels:
+      - "github-actions"
+      - "dependencies"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    pr-branch-prefix: "deps/actions/"
+    ignore:
+      # Keep actions/checkout on a major version tracked by CI conventions;
+      # bump to the latest major manually after testing.
+      - dependency-name: "actions/checkout"
+        versions: ["4.x"]
