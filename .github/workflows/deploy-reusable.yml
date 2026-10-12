@@ -17,10 +17,15 @@ on:
     secrets:
       DEPLOY_TOKEN:
         required: false
+permissions:
+  contents: read
+  actions: read
+  id-token: write  # needed for OIDC-based deploys
 jobs:
   deploy:
     environment:
       name: ${{ inputs.environment }}
+      url: https://${{ inputs.environment }}.example.com
     runs-on: ubuntu-latest
     defaults:
       run:

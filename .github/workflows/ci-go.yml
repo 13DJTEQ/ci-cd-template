@@ -7,13 +7,21 @@ on:
     branches: [main]
 # Guard: these callers only run in CONSUMER repos (which have a real project).
 # The template repo itself has no project, so skip to avoid failing CI noise.
+permissions:
+  contents: read
+  actions: read
 jobs:
-  call-ci:
+  ci:
     if: github.repository != '13DJTEQ/ci-cd-template'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        go-version: ["1.21", "1.22", "1.23"]
     uses: ./.github/workflows/ci-reusable.yml
     with:
       stack: go
-      go-version: "1.22"
+      go-version: ${{ matrix.go-version }}
       lint-command: "go vet ./..."
       build-command: "go build ./..."
       test-command: "go test ./..."

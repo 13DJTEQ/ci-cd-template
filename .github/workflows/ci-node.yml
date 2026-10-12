@@ -8,13 +8,21 @@ on:
     branches: [main]
 # Guard: these callers only run in CONSUMER repos (which have a real project).
 # The template repo itself has no project, so skip to avoid failing CI noise.
+permissions:
+  contents: read
+  actions: read
 jobs:
-  call-ci:
+  ci:
     if: github.repository != '13DJTEQ/ci-cd-template'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        node-version: ["18", "20", "22"]
     uses: ./.github/workflows/ci-reusable.yml
     with:
       stack: node
-      node-version: "20"
+      node-version: ${{ matrix.node-version }}
       lint-command: "npm run lint"
       build-command: "npm run build"
       test-command: "npm test"

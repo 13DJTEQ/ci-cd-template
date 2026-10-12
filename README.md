@@ -69,9 +69,9 @@ gate, since it holds no buildable project.
 
 The template defines two environments:
 - `staging` — no approval; auto-deploys on tag.
-- `prod` — **required reviewer** (you). Tag pushes wait for your manual approval
-  before deploying. Set the reviewer via Settings → Environments → prod →
-  "Required reviewers."
+- `production` — **required reviewer** (13DJTEQ / davethompson). Tag pushes wait
+  for manual approval before deploying. Reviewer configured via API / Settings →
+  Environments → production → "Required reviewers."
 
 Secrets each consumer repo needs:
 - `DEPLOY_TOKEN` — used by deploy-reusable.yml (your staging/prod credentials).
